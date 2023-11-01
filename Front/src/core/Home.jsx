@@ -1,11 +1,10 @@
 import Menu from "./Menu";
 import Layout from "./Layout";
 import { useEffect, useState } from "react";
+import { updateClient } from "./apiCore";
 
 const Home = () => {
   const [data, setData] = useState([]);
-  const [entregue, setEntregue] = useState(false);
-  const [deliveryDate, setDeliveryDate] = useState("");
   const [logistica, setLogistica] = useState("");
   const [tentativasEntrega, setTentativasEntrega] = useState("");
   const [transportador, setTransportador] = useState("");
@@ -34,14 +33,44 @@ const Home = () => {
   }, []);
 
   const openModal = (item) => {
-    setEntregue(item.entregue);
-    setDeliveryDate(item.Previsao_entrega_c01_F0FFF0);
     setLogistica(item.Logistica_c01_F0FFF0);
     setTentativasEntrega(item.Tentativas_entregas_c01_F0FFF0);
     setTransportador(item.Transportador_c01_F0FFF0);
   };
 
-  const saveChanges = () => {};
+  const saveChanges = async (item) => {
+    const logistica = document.getElementById("logisticaDropdown").value;
+    const tentativasEntrega =
+      document.getElementById("tentativasEntrega").value;
+    const transportador = document.getElementById(
+      "transportadorDropdown"
+    ).value;
+
+    console.log("BOTAO SALVAR foi clicado");
+
+    const updatedData = {
+      Logistica_c01_F0FFF0: logistica,
+      Tentativas_entregas_c01_F0FFF0: tentativasEntrega,
+      Transportador_c01_F0FFF0: transportador,
+    };
+    console.log(`${item.Cliente_c01_F0FFF0}`);
+
+    console.log(updatedData);
+    try {
+      const data = await updateClient(item.id, updatedData);
+
+      if (!data || data.error) {
+        console.error("Error saving data:", data.error);
+        // Handle the error here, such as showing an error message to the user
+      } else {
+        console.log("Data saved successfully");
+        // Close the modal, update the UI, or take other actions as needed
+      }
+    } catch (error) {
+      console.error("Error saving data:", error);
+      // Handle the error here, such as showing an error message to the user
+    }
+  };
 
   return (
     <>
@@ -95,7 +124,7 @@ const Home = () => {
                     type="button"
                     className="btn btn-primary"
                     data-bs-toggle="modal"
-                    data-bs-target="#exampleModal"
+                    data-bs-target={`#exampleModal-${item.id}`}
                     onClick={() => openModal(item)}
                   >
                     Opções
@@ -103,9 +132,9 @@ const Home = () => {
 
                   <div
                     className="modal fade"
-                    id="exampleModal"
+                    id={`exampleModal-${item.id}`}
                     tabIndex="-1"
-                    aria-labelledby="exampleModalLabel"
+                    aria-labelledby={`exampleModalLabel-${item.id}`}
                     aria-hidden="true"
                   >
                     <div className="modal-dialog">
@@ -188,39 +217,6 @@ const Home = () => {
                               </option>
                             </select>
                           </div>
-
-                          {/* <div className="form-check">
-                            <input
-                              type="checkbox"
-                              className="form-check-input"
-                              checked={entregue}
-                              onChange={(e) => setEntregue(e.target.checked)}
-                            />
-                            <label
-                              htmlFor="entregueCheckbox"
-                              className="form-check-label"
-                            >
-                              Entregue
-                            </label>
-                          </div>
-                          {entregue && (
-                            <div className="">
-                              <label
-                                htmlFor="deliveryDate"
-                                className="form-label"
-                              >
-                                Data de Entrega
-                              </label>
-                              <input
-                                type="date"
-                                id="deliveryDate"
-                                value={deliveryDate}
-                                onChange={(e) =>
-                                  setDeliveryDate(e.target.value)
-                                }
-                              />
-                            </div>
-                          )} */}
                         </div>
 
                         <div className="modal-footer">
@@ -234,7 +230,7 @@ const Home = () => {
                           <button
                             type="button"
                             className="btn btn-primary"
-                            onClick={saveChanges}
+                            onClick={() => saveChanges(item)}
                           >
                             Salvar
                           </button>
